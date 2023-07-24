@@ -1,5 +1,6 @@
 package org.apache.minibase;
 
+import org.apache.log4j.Logger;
 import org.apache.minibase.DiskStore.DefaultCompactor;
 import org.apache.minibase.DiskStore.DefaultFlusher;
 import org.apache.minibase.DiskStore.MultiIter;
@@ -13,6 +14,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MStore implements MiniBase {
+
+  private static final Logger LOG = Logger.getLogger(MStore.class);
 
   private ExecutorService pool;
   private MemStore memStore;
@@ -39,6 +42,7 @@ public class MStore implements MiniBase {
 
     this.compactor = new DefaultCompactor(diskStore);
     this.compactor.start();
+    LOG.info("MStore opened.");
     return this;
   }
 
@@ -56,6 +60,7 @@ public class MStore implements MiniBase {
 
   @Override
   public void put(byte[] key, byte[] value) throws IOException {
+    LOG.info("put key: " + Bytes.toHex(key) + ", value: " + Bytes.toHex(value));
     this.memStore.add(KeyValue.createPut(key, value, sequenceId.incrementAndGet()));
   }
 
