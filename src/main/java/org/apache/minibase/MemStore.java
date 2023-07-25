@@ -18,6 +18,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+
+/**
+ * MemStore 中核心数据库结构:
+ *          ConcurrentSkipListMap 内存跳表
+ */
 public class MemStore implements Closeable {
 
   private static final Logger LOG = Logger.getLogger(MemStore.class);
@@ -67,6 +72,8 @@ public class MemStore implements Closeable {
                 "Memstore is full, currentDataSize=" + dataSize.get() + "B, maxMemstoreSize="
                 + conf.getMaxMemstoreSize() + "B, please wait until the flushing is finished.");
       } else if (isSnapshotFlushing.compareAndSet(false, true)) {
+        LOG.debug("Memstore is full, currentDataSize=" + dataSize.get() + "B, maxMemstoreSize="
+                  + conf.getMaxMemstoreSize() + "B, start flushing.");
         pool.submit(new FlusherTask());
       }
     }
@@ -102,7 +109,11 @@ public class MemStore implements Closeable {
       boolean success = false;
       for (int i = 0; i < conf.getFlushMaxRetries(); i++) {
         try {
-          flusher.flush(new IteratorWrapper(snapshot));
+          LOG.debug("Start flushing memstore, retries=" + i + ", maxFlushRetries="
+                    + conf.getFlushMaxRetries());
+          flusher.flush(new IteratorWrapper(snapshot));//Flush 生成 DiskFile
+          LOG.debug("Finish flushing memstore, retries=" + i + ", maxFlushRetries="
+                    + conf.getFlushMaxRetries());
           success = true;
         } catch (IOException e) {
           LOG.error("Failed to flush memstore, retries=" + i + ", maxFlushRetries="

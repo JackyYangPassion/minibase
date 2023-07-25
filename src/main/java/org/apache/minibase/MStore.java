@@ -13,6 +13,26 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * 1. 实现KVDB最基本的功能，包括put, get, delete, scan.
+ *    MStore 是 RS 精简版本
+ *    重点：
+ *    基础数据结构的实现，包括 MemStore, DiskStore, DiskFile
+ *    基本逻辑实现：
+ *           写链路：Flush/Compact/KV序列化/DiskFile读写 如何讲讲明白 && 实际开发应用？
+ *           读链路:
+ *           1. 如何做到全局有序？
+ *           2. seekTo 逻辑，指定start,end key, MemStore/DiskStore 具体实现高效 SeekTo？
+ *
+ *
+ * 2. 脚手架构建完：
+ *    TODO:
+ *    a. WAL
+ *    b. Filter
+ *    c. LRU Cache
+ *    d. 二分查找
+ *
+ */
 public class MStore implements MiniBase {
 
   private static final Logger LOG = Logger.getLogger(MStore.class);
@@ -60,13 +80,19 @@ public class MStore implements MiniBase {
 
   @Override
   public void put(byte[] key, byte[] value) throws IOException {
-    LOG.info("put key: " + Bytes.toHex(key) + ", value: " + Bytes.toHex(value));
+    //LOG.debug("put key: " + Bytes.toHex(key) + ", value: " + Bytes.toHex(value));
     this.memStore.add(KeyValue.createPut(key, value, sequenceId.incrementAndGet()));
   }
 
   @Override
   public KeyValue get(byte[] key) throws IOException {
     KeyValue result = null;
+
+    /**
+     * 此处在HBase 中具体实现是，将Get 请求转换成 Scan 请求，然后取第一个结果。
+     * RSRpcServices#get
+     * Scan scan = new Scan(get);
+     */
     Iter<KeyValue> it = scan(key, Bytes.EMPTY_BYTES);
     if (it.hasNext()) {
       KeyValue kv = it.next();
@@ -85,6 +111,7 @@ public class MStore implements MiniBase {
   @Override
   public Iter<KeyValue> scan(byte[] start, byte[] stop) throws IOException {
     List<SeekIter<KeyValue>> iterList = new ArrayList<>();
+    // 当查询的时候 需要用到MemStore 和 DiskStore 中的数据，所以需要将两者的迭代器合并起来。
     iterList.add(memStore.createIterator());
     iterList.add(diskStore.createIterator());
     MultiIter it = new MultiIter(iterList);

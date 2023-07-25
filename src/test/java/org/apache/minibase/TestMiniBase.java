@@ -63,8 +63,11 @@ public class TestMiniBase {
   @Test
   public void testPut() throws IOException, InterruptedException {
     // Set maxMemstoreSize to 64B, which make the memstore flush frequently.
-    Config conf = new Config().setDataDir(dataDir).setMaxMemstoreSize(1).setFlushMaxRetries(1)
-            .setMaxDiskFiles(10);
+    Config conf = new Config()
+                      .setDataDir(dataDir)
+                      .setMaxMemstoreSize(1)
+                      .setFlushMaxRetries(1)
+                      .setMaxDiskFiles(10);
     final MiniBase db = MStore.create(conf).open();
 
     final long totalKVSize = 100L;

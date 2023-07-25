@@ -16,6 +16,16 @@ import java.util.TreeSet;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+/**
+ * 类比 HFile:
+ * LSM Tree 具体实现
+ * 内存部分：ConcurrentSkipListMap
+ * 磁盘部分：DiskFile/HFile
+ *         特点：
+ *         1. 支持高效读取操作
+ *         2. 支持 data-block 小块读取数据
+ *
+ */
 public class DiskFile implements Closeable {
 
   public static final int BLOCK_SIZE_UP_LIMIT = 1024 * 1024 * 2;

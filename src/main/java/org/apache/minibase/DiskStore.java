@@ -18,6 +18,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
+/**
+ * DiskStore 核心数据结构
+ *           DiskFile 集合#ArrayList
+ */
 public class DiskStore implements Closeable {
 
   private static final Logger LOG = Logger.getLogger(DiskStore.class);
@@ -26,6 +31,7 @@ public class DiskStore implements Closeable {
   private static final Pattern DATA_FILE_RE = Pattern.compile("data\\.([0-9]+)"); // data.1
 
   private String dataDir;
+
   private List<DiskFile> diskFiles;
 
   private int maxDiskFiles;
@@ -171,8 +177,13 @@ public class DiskStore implements Closeable {
     }
 
     private void performCompact(List<DiskFile> filesToCompact) throws IOException {
+      //add by Github Compilot
+      LOG.debug("Start to compact files: " + filesToCompact.size());
       String fileName = diskStore.getNextDiskFileName();
       String fileTempName = fileName + FILE_NAME_TMP_SUFFIX;
+
+      //compact 行为类似于Flush 序列化 DiskFile
+      //此处主要涉及DiskFile 读/写操作
       try {
         try (DiskFileWriter writer = new DiskFileWriter(fileTempName)) {
           for (Iter<KeyValue> it = diskStore.createIterator(filesToCompact); it.hasNext();) {
@@ -187,7 +198,7 @@ public class DiskStore implements Closeable {
         }
 
         // Rename the data files to archive files.
-        // TODO when rename the files, will we effect the scan ?
+        // TODO: when rename the files, will we effect the scan ?
         for (DiskFile df : filesToCompact) {
           df.close();
           File file = new File(df.getFileName());
@@ -198,8 +209,10 @@ public class DiskStore implements Closeable {
         }
         diskStore.removeDiskFiles(filesToCompact);
 
-        // TODO any concurrent issue ?
+        // TODO: any concurrent issue ?
         diskStore.addDiskFile(fileName);
+
+        LOG.debug("Compact files: " + filesToCompact + " to " + fileName);
       } finally {
         File f = new File(fileTempName);
         if (f.exists()) {
@@ -216,9 +229,11 @@ public class DiskStore implements Closeable {
     }
 
     public void run() {
+      //守护线程：轮询检测是否需要进行compact操作
       while (running) {
         try {
           boolean isCompacted = false;
+          //设定阈值，当DiskFile 数量超过阈值时，进行compact操作
           if (diskStore.getDiskFiles().size() > diskStore.getMaxDiskFiles()) {
             performCompact(diskStore.getDiskFiles());
             isCompacted = true;
@@ -259,6 +274,7 @@ public class DiskStore implements Closeable {
     public MultiIter(SeekIter<KeyValue> iters[]) throws IOException {
       assert iters != null;
       this.iters = iters; // Used for seekTo
+      //小顶堆 具体实现，最新==最小在最上边
       this.queue = new PriorityQueue<>(((o1, o2) -> o1.kv.compareTo(o2.kv)));
       for (int i = 0; i < iters.length; i++) {
         if (iters[i] != null && iters[i].hasNext()) {

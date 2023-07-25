@@ -3,6 +3,11 @@ package org.apache.minibase;
 import java.io.IOException;
 import java.util.Comparator;
 
+
+/**
+ * KeyValue 是KV-DB中核心的数据模型实现
+ * 类比Graph: Edge/Vertex/Properties
+ */
 public class KeyValue implements Comparable<KeyValue> {
 
   public static final int RAW_KEY_LEN_SIZE = 4;
