@@ -60,7 +60,7 @@ public class MStore implements MiniBase {
   }
 
   @Override
-  public KeyValue get(byte[] key) throws IOException {
+  public KeyValue get(byte[] key) throws IOException {//get 是一种特殊的Scan
     KeyValue result = null;
     Iter<KeyValue> it = scan(key, Bytes.EMPTY_BYTES);
     if (it.hasNext()) {
@@ -74,7 +74,7 @@ public class MStore implements MiniBase {
 
   @Override
   public void delete(byte[] key) throws IOException {
-    this.memStore.add(KeyValue.createDelete(key, sequenceId.incrementAndGet()));
+    this.memStore.add(KeyValue.createDelete(key, sequenceId.incrementAndGet()));//Delete 也是写入操作，指示打标一下
   }
 
   @Override
