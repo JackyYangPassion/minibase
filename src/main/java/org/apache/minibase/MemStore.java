@@ -67,7 +67,7 @@ public class MemStore implements Closeable {
                 "Memstore is full, currentDataSize=" + dataSize.get() + "B, maxMemstoreSize="
                 + conf.getMaxMemstoreSize() + "B, please wait until the flushing is finished.");
       } else if (isSnapshotFlushing.compareAndSet(false, true)) {
-        pool.submit(new FlusherTask());
+        pool.submit(new FlusherTask());//根据阈值进行内存文件Flush
       }
     }
   }
@@ -99,6 +99,7 @@ public class MemStore implements Closeable {
       }
 
       // Step.2 Flush the memstore to disk file.
+      // Flush 阶段是否进行去重操作
       boolean success = false;
       for (int i = 0; i < conf.getFlushMaxRetries(); i++) {
         try {

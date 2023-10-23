@@ -137,6 +137,7 @@ public class DiskStore implements Closeable {
     public void flush(Iter<KeyValue> it) throws IOException {
       String fileName = diskStore.getNextDiskFileName();
       String fileTempName = fileName + FILE_NAME_TMP_SUFFIX;
+      //TODO: 要讲明白 Flush 阶段如何进行去重
       try {
         try (DiskFileWriter writer = new DiskFileWriter(fileTempName)) {
           while (it.hasNext()) {
