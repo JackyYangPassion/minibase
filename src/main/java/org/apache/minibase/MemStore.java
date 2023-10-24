@@ -45,7 +45,7 @@ public class MemStore implements Closeable {
   }
 
   public void add(KeyValue kv) throws IOException {
-    flushIfNeeded(true);
+    flushIfNeeded(true);//调用Flush 每次写入校验一次
     updateLock.readLock().lock();
     try {
       KeyValue prevKeyValue;
@@ -90,7 +90,7 @@ public class MemStore implements Closeable {
       // Step.1 memstore snpashot
       updateLock.writeLock().lock();
       try {
-        snapshot = kvMap;
+        snapshot = kvMap; //打内存快照，并生成新的 MemStore
         // TODO MemStoreIter may find the kvMap changed ? should synchronize ?
         kvMap = new ConcurrentSkipListMap<>();
         dataSize.set(0);

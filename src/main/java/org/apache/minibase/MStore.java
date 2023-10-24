@@ -38,7 +38,7 @@ public class MStore implements MiniBase {
     this.memStore = new MemStore(conf, new DefaultFlusher(diskStore), pool);
 
     this.compactor = new DefaultCompactor(diskStore);
-    this.compactor.start();
+    this.compactor.start();// 作为后端进程，持续运行
     return this;
   }
 
