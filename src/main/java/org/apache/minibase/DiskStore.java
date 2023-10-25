@@ -138,6 +138,7 @@ public class DiskStore implements Closeable {
       String fileName = diskStore.getNextDiskFileName();
       String fileTempName = fileName + FILE_NAME_TMP_SUFFIX;
       //TODO: 要讲明白 Flush 阶段如何进行去重
+      // 在CodingReading 中写入链路 Flush 模块有具体描述DiskFile 写入逻辑
       try {
         try (DiskFileWriter writer = new DiskFileWriter(fileTempName)) {
           while (it.hasNext()) {
@@ -255,15 +256,15 @@ public class DiskStore implements Closeable {
     }
 
     private SeekIter<KeyValue> iters[];
-    private PriorityQueue<IterNode> queue;
+    private PriorityQueue<IterNode> queue;//存储的是每一个迭代器对象，优先级按照第一个元素进行对比
 
     public MultiIter(SeekIter<KeyValue> iters[]) throws IOException {
       assert iters != null;
       this.iters = iters; // Used for seekTo
-      this.queue = new PriorityQueue<>(((o1, o2) -> o1.kv.compareTo(o2.kv)));
+      this.queue = new PriorityQueue<>(((o1, o2) -> o1.kv.compareTo(o2.kv)));//Lambda 格式调用KeyValue 数据结构中的compareTo方法给定顺序
       for (int i = 0; i < iters.length; i++) {
         if (iters[i] != null && iters[i].hasNext()) {
-          queue.add(new IterNode(iters[i].next(), iters[i]));
+          queue.add(new IterNode(iters[i].next(), iters[i]));//拿到每一个迭代器(MemStore or DisFile 的迭代器)的第一个元素 + 迭代器对象，在 PriorityQueue 进行排序
         }
       }
     }
@@ -283,7 +284,7 @@ public class DiskStore implements Closeable {
       while (!queue.isEmpty()) {
         IterNode first = queue.poll();
         if (first.kv != null && first.iter != null) {
-          if (first.iter.hasNext()) {
+          if (first.iter.hasNext()) {// 每次queue.poll() 之后，需要按照每个迭代器 第一个元素进行重新排序，始终保障取数有价值
             queue.add(new IterNode(first.iter.next(), first.iter));
           }
           return first.kv;

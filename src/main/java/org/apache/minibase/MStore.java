@@ -159,7 +159,7 @@ public class MStore implements MiniBase {
     }
 
     @Override
-    public KeyValue next() throws IOException {
+    public KeyValue next() throws IOException {// 返回 KeyValue 结构数据
       if (pendingKV == null) {
         switchToNewKey();
       }

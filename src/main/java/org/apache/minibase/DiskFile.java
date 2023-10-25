@@ -16,6 +16,13 @@ import java.util.TreeSet;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+/**
+ *
+ * 主要设计实现对应的 DiskFile 文件格式
+ * BlocKWriter
+ * BlockReader
+ *
+ */
 public class DiskFile implements Closeable {
 
   public static final int BLOCK_SIZE_UP_LIMIT = 1024 * 1024 * 2;
@@ -159,6 +166,13 @@ public class DiskFile implements Closeable {
     private List<BlockMeta> blockMetas = new ArrayList<>();
     private int totalBytes = 0;
 
+    /**
+     *
+     * @param lastKV
+     * @param offset
+     * @param size
+     * @param bloomFilter
+     */
     public void append(KeyValue lastKV, long offset, long size, byte[] bloomFilter) {
       BlockMeta meta = new BlockMeta(lastKV, offset, size, bloomFilter);
       blockMetas.add(meta);
@@ -323,7 +337,16 @@ public class DiskFile implements Closeable {
       currentWriter = new BlockWriter();
     }
 
+    /**
+     * 此处更新文件索引结构
+     * 每次写入后，更新 Block 写入位置
+     * 1. Index
+     * 2. BlockData
+     * 3. Trailer
+     *
+     */
     private void switchNextBlockWriter() throws IOException {
+
       assert currentWriter.getLastKV() != null;
 
       byte[] buffer = currentWriter.serialize();

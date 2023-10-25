@@ -119,7 +119,7 @@ public class KeyValue implements Comparable<KeyValue> {
   }
 
   @Override
-  public int compareTo(KeyValue kv) {
+  public int compareTo(KeyValue kv) {//统一采用此算法进行排序，在Compact,Flush,Scan(Read) 等场景中应用
     if (kv == null) {
       throw new IllegalArgumentException("kv to compare should be null");
     }
