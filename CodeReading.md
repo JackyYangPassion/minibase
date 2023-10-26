@@ -1,11 +1,11 @@
 # miniBase 源码阅读笔记
-## 前言
+## 0.前言
 MiniBase 主要讲述基本KV 数据结构实现，暂时不涉及软件服务架构层面实现  
 结合 LSM Tree 简化版本实现 MemStore + DiskFile,暂时未实现WAL。
 
 **LSM Tree 关键技术：**
 ![图片alt](img/KVDB-LSMTree.png "LSM Tree 关键技术")
-## KV 写入链路：
+## 1. KV 写入链路：
     1. 写逻辑简单，顺序写，吞吐率高
 **写入链路**  
 本模块主要讲解两个核心动作 Flush、Compact
@@ -109,13 +109,13 @@ QA:
    1. 暂时从 compact 链路没有找到多版本去重逻辑 待进一步确认
 
 
-## KV 查询链路
+## 2. KV 查询链路
     1. 查询逻辑复杂，重点是 Iter 高效实现，如何快速定位 Key 位置
     2. 核心看Scan 过程 <-----> 对应HBase 实际实现 <br>
     3. BloomFilter <br>
     4. Seek HFile【多版本影响查询CPU】<br>
 
-## 核心数据结构
+## 3. 核心数据结构
     1. KeyValue:
     2. DiskFile:
     3. MemStore： 主要存储对象是 MemStore ，通过内存councurrent_list 存储，算法动作是Flush 操作
@@ -179,7 +179,7 @@ public void seekTo(KeyValue kv) throws IOException {
 ```
 
 
-## 核心算法实现：
+## 4. 核心算法实现：
 1. 查询/Compact/Flush 均需要使用的核心逻辑  
 a. Iter<KeyValue>: 在MiniBase 中定义此接口，后续封装实现haseNext,next 等来完成查询数据  
 b. MultiIter： 整个KV查询逻辑的关键，scan 查询直接调用，其中it.seekTo() 指定查询起点  
