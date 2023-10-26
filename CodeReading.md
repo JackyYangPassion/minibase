@@ -192,6 +192,11 @@ d. InternalIterator: 在DiskFile中实现，主要是根据起始点定位key
 
 **读取链路**
 
+**Do Task**
+1. 修改代码，增加 WAL 功能
+2. 增加 Compact 策略
+3. ...... etc.
+
 整体QA回答
 
 
