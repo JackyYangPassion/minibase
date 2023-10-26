@@ -2,6 +2,9 @@
 ## 前言
 MiniBase 主要讲述基本KV 数据结构实现，暂时不涉及软件服务架构层面实现  
 结合 LSM Tree 简化版本实现 MemStore + DiskFile,暂时未实现WAL。
+
+**LSM Tree 关键技术：**
+![图片alt](img/KVDB-LSMTree.png "LSM Tree 关键技术")
 ## KV 写入链路：
     1. 写逻辑简单，顺序写，吞吐率高
 **写入链路**  
