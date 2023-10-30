@@ -99,6 +99,15 @@ public class Bytes {
     return h;
   }
 
+  /**
+   * 比较 a,b 两个字节数组的大小算法实现
+   * 1. 如果数组a大于数组b，返回正数；
+   * 2. 如果数组a小于数组b，返回负数；
+   * 3. 如果数组a等于数组b，返回0。
+   * @param a
+   * @param b
+   * @return
+   */
   public static int compare(byte[] a, byte[] b) {
     if (a == b) return 0;
     if (a == null) return -1;

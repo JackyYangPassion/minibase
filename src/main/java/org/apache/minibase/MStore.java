@@ -59,8 +59,9 @@ public class MStore implements MiniBase {
     this.memStore.add(KeyValue.createPut(key, value, sequenceId.incrementAndGet()));
   }
 
+  //get 是一种特殊的Scan
   @Override
-  public KeyValue get(byte[] key) throws IOException {//get 是一种特殊的Scan
+  public KeyValue get(byte[] key) throws IOException {
     KeyValue result = null;
     Iter<KeyValue> it = scan(key, Bytes.EMPTY_BYTES);
     if (it.hasNext()) {
@@ -77,12 +78,26 @@ public class MStore implements MiniBase {
     this.memStore.add(KeyValue.createDelete(key, sequenceId.incrementAndGet()));//Delete 也是写入操作，指示打标一下
   }
 
+  /**
+   * 查询核心逻辑：
+   * MStore = memStore + diskStore
+   * 组成 Iterator , 进行快速查询
+   * 性能关键点：
+   *     1. BloomFilter 进行文件过滤。
+   *     2. Compact 合并算法。
+   *     3. HFile 索引构建，快速 Seek 到 KV 记录「 HBase 中实际有哪些索引沉淀？」。
+   *     4. KV 服务中，有哪些 RPC 级别等的核心功能。
+   * @param start
+   * @param stop
+   * @return
+   * @throws IOException
+   */
   @Override
   public Iter<KeyValue> scan(byte[] start, byte[] stop) throws IOException {
     List<SeekIter<KeyValue>> iterList = new ArrayList<>();
     iterList.add(memStore.createIterator());
     iterList.add(diskStore.createIterator());
-    MultiIter it = new MultiIter(iterList);
+    MultiIter it = new MultiIter(iterList);//此处核心逻辑是按照迭代器第一个元素进行按照字典序排序
 
     // with start being EMPTY_BYTES means minus infinity, will skip to seek.
     if (Bytes.compare(start, Bytes.EMPTY_BYTES) != 0) {
@@ -131,7 +146,7 @@ public class MStore implements MiniBase {
       while (storeIt.hasNext()) {
         curKV = storeIt.next();
         if (shouldStop(curKV)) {
-          return;
+          return;// 如果是停止，则直接返回
         }
         if (curKV.getOp() == Op.Put) {
           if (lastKV == null) {

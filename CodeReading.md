@@ -41,7 +41,7 @@ DiskFileWriter类包含了BlockWriter,BlockIndexWriter,Trailer 写入，<br>
 
 
 
-**2.Compact模块:**
+2. **Compact模块:**
 
 在MStore 构造函数中默认开启Compact 线程后端进行DiskFile 合并，<br>
 具体实现类 在DiskStore内部类DefaultCompactor中核心方法如下:
@@ -114,6 +114,47 @@ QA:
     2. 核心看 Scan 过程 <-----> 对应 HBase 实际实现
     3. BloomFilter
     4. Seek HFile【多版本影响查询CPU】
+
+查询核心入口 MStore 中的 Scan 实现
+```java
+/**
+   * 查询核心逻辑：
+   * MStore = memStore + diskStore
+   * 组成 Iterator , 进行快速查询
+   * 性能关键点：
+   *     1. BloomFilter 进行文件过滤。
+   *     2. Compact 合并算法。
+   *     3. HFile 索引构建，快速 Seek 到 KV 记录「 HBase 中实际有哪些索引沉淀？」。
+   *     4. KV 服务中，有哪些 RPC 级别等的核心功能。
+   * @param start
+   * @param stop
+   * @return
+   * @throws IOException
+   */
+
+  @Override
+  public Iter<KeyValue> scan(byte[] start, byte[] stop) throws IOException {
+    List<SeekIter<KeyValue>> iterList = new ArrayList<>();
+    iterList.add(memStore.createIterator());
+    iterList.add(diskStore.createIterator());
+    MultiIter it = new MultiIter(iterList);
+
+    // with start being EMPTY_BYTES means minus infinity, will skip to seek.
+    if (Bytes.compare(start, Bytes.EMPTY_BYTES) != 0) {
+      it.seekTo(KeyValue.createDelete(start, sequenceId.get()));
+    }
+
+    KeyValue stopKV = null;
+    if (Bytes.compare(stop, Bytes.EMPTY_BYTES) != 0) {
+      // the smallest kv in all KeyValue with the same key.
+      stopKV = KeyValue.createDelete(stop, Long.MAX_VALUE);
+    }
+    return new ScanIter(stopKV, it);
+  }
+```
+
+
+查询链路中，如何做成分布式，快速查询能力：还需要有哪些技术工程实现？ 
 
 ## 3. 核心数据结构
     1. KeyValue:
