@@ -15,10 +15,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class MStore implements MiniBase {
 
   private ExecutorService pool;
-  private MemStore memStore;
-  private DiskStore diskStore;
-  private Compactor compactor;
-  private AtomicLong sequenceId;
+  private MemStore memStore;// LSM Tree 中内存部分实现类
+  private DiskStore diskStore;// LSM Tree 中 DiskFile 集合类
+  private Compactor compactor;// 后台 Compact 合并程序
+  private AtomicLong sequenceId;// 序列号ID：需要看懂这个ID的作用
 
   private Config conf;
 

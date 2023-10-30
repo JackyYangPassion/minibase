@@ -26,6 +26,8 @@ public class MemStore implements Closeable {
 
   private volatile ConcurrentSkipListMap<KeyValue, KeyValue> kvMap;
   private volatile ConcurrentSkipListMap<KeyValue, KeyValue> snapshot;
+  // 基于 memStore 如何保障有序？
+  // 通过 SortedMap 转换过程中进行排序
 
   private final ReentrantReadWriteLock updateLock = new ReentrantReadWriteLock();
   private final AtomicBoolean isSnapshotFlushing = new AtomicBoolean(false);

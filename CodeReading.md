@@ -111,28 +111,28 @@ QA:
 
 ## 2. KV 查询链路
     1. 查询逻辑复杂，重点是 Iter 高效实现，如何快速定位 Key 位置
-    2. 核心看Scan 过程 <-----> 对应HBase 实际实现 <br>
-    3. BloomFilter <br>
-    4. Seek HFile【多版本影响查询CPU】<br>
+    2. 核心看 Scan 过程 <-----> 对应 HBase 实际实现
+    3. BloomFilter
+    4. Seek HFile【多版本影响查询CPU】
 
 ## 3. 核心数据结构
     1. KeyValue:
     2. DiskFile:
-    3. MemStore： 主要存储对象是 MemStore ，通过内存councurrent_list 存储，算法动作是Flush 操作
+    3. MemStore： 主要存储对象是 MemStore ，通过内存 Councurrent_list 存储，算法动作是Flush 操作
     4. DiskStore：  主要存储对象是 DiskFile 文件结构 ,算法动作是Compact
-    5. MStore:  继承实现 MiniBase, 启动compact 守护线程
+    5. MStore:  继承实现 MiniBase, 启动 Compact 守护线程
 
 
-**核心数据结构MultiIter 代码解释**  
+**核心数据结构 MultiIter 代码解释**  
 核心数据结构  
-IterNode：                      存储从MemStore or DiskFile 获取的迭代器及第一个KV保存在此数据结构中  
+IterNode：                      存储从 MemStore or DiskFile 获取的迭代器及第一个 KV 保存在此数据结构中  
 PriorityQueue<IterNode> queue： 存储的是每一个迭代器对象，优先级按照第一个元素进行对比，
 
 
 核心算法
 
 构造函数：  
-通过kv.compareTo 当作比较器，「比较逻辑补充」，初始化 PriorityQueue 队列 
+通过 kv.compareTo 当作比较器，「比较逻辑补充」，初始化 PriorityQueue 队列 
 ```java
 public MultiIter(SeekIter<KeyValue> iters[]) throws IOException {
       assert iters != null;
@@ -147,7 +147,7 @@ public MultiIter(SeekIter<KeyValue> iters[]) throws IOException {
 ```
 
 Next()：  
-保障每次按照字典序取KV元素，然后重新加入queue ，从而确保全局有序。  
+保障每次按照字典序取 KV 元素，然后重新加入 Queue ，从而确保全局有序。  
 此处也就是多文件归并排序实现的经典Demo。
 ```java
 public KeyValue next() throws IOException {
@@ -164,7 +164,7 @@ public KeyValue next() throws IOException {
     }
 ```
 SeekTo(kv):  
-每一个迭代器Seek 到指定位置，重新排序加入 queue ，从而确保全局有序。  
+每一个迭代器 Seek 到指定位置，重新排序加入 queue ，从而确保全局有序。  
 ```java
 public void seekTo(KeyValue kv) throws IOException {
       queue.clear();
@@ -181,10 +181,10 @@ public void seekTo(KeyValue kv) throws IOException {
 
 ## 4. 核心算法实现：
 1. 查询/Compact/Flush 均需要使用的核心逻辑  
-a. Iter<KeyValue>: 在MiniBase 中定义此接口，后续封装实现haseNext,next 等来完成查询数据  
-b. MultiIter： 整个KV查询逻辑的关键，scan 查询直接调用，其中it.seekTo() 指定查询起点  
-c. SeekIter: 直接定位到指定位置，在MStore 中定义此接口， 具体实现是在MemStore 和 DiskFile 中实现  
-d. InternalIterator: 在DiskFile中实现，主要是根据起始点定位key  
+a. Iter<KeyValue>: 在 MiniBase 中定义此接口，后续封装实现 haseNext,next 等来完成查询数据  
+b. MultiIter： 整个KV查询逻辑的关键，scan 查询直接调用，其中 it.seekTo() 指定查询起点  
+c. SeekIter: 直接定位到指定位置，在 MStore 中定义此接口， 具体实现是在 MemStore 和 DiskFile 中实现  
+d. InternalIterator: 在 DiskFile 中实现，主要是根据起始点定位 key  
 
 
 # TODO-LIST
