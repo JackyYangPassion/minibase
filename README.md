@@ -32,3 +32,15 @@ while (kv.hasNext()) {
 git clone git@github.com:openinx/minibase.git
 mvn clean package
 ```
+
+
+# 延伸TODO 需要代码实现
+1. 实现WAL
+2. 实现LRU cach 加速读
+3. scan 实现二分查找 加速读
+4. 重新设计Get 操作，利用BloomFilter 过滤掉无用的DataBlock
+
+
+# 附件资料
+1.SkipList [源码](https://github.com/openinx/algorithm-solution/blob/master/template/sort/SkipList.java)
+  
